@@ -1,0 +1,25 @@
+[package]
+name = "core-mx-life-bonding-sc"
+version = "3.1.0"
+authors = ["Bucur David - Itheum"]
+edition = "2021"
+publish = false
+
+[lib]
+path = "src/lib.rs"
+
+[dev-dependencies]
+ core-mx-liveliness-stake = {path="../core-mx-liveliness-stake-sc"}
+
+[dependencies.multiversx-sc]
+version = "0.51.0"
+
+
+[dev-dependencies.multiversx-sc-scenario]
+version = "0.51.0"
+
+[workspace]
+members = [
+    ".",
+    "meta",
+]
