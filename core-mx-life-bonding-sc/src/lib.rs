@@ -51,8 +51,8 @@ pub trait LifeBondingContract:
     #[upgrade]
     fn upgrade(&self) {
         // TO BE UNCOMMENTED FOR PROD
-        // self.contract_state().set(State::Inactive);
-        // self.contract_state_event(State::Inactive);
+        self.contract_state().set(State::Inactive);
+        self.contract_state_event(State::Inactive);
 
         // NEEDS TO BE USED AS STORAGE WAS NOT IMPLEMENTED
         // DEVNET
@@ -209,7 +209,7 @@ pub trait LifeBondingContract:
             );
 
             self.total_bond_amount()
-                .update(|value| *value -= &(&bond_cache.remaining_amount + &penalty_amount));
+                .update(|value| *value -= &bond_cache.remaining_amount);
 
             compensation_cache.accumulated_amount += &penalty_amount;
         } else {

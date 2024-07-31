@@ -156,12 +156,11 @@ pub trait ViewsModule:
 
         for bond_id in bonds.iter() {
             let bond: Bond<<Self as ContractBase>::Api> = self.get_bond(bond_id);
-            let difference = bond.unbond_timestamp - timestamp;
-
             bond_count += &bond.remaining_amount;
             if timestamp >= bond.unbond_timestamp {
                 continue;
             }
+            let difference = bond.unbond_timestamp - timestamp;
 
             let bond_score = ((BigUint::from(10_000_000_000_000u64) / bond.lock_period)
                 * difference)

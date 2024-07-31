@@ -79,8 +79,6 @@ pub trait CoreMxLivelinessStake:
                 &address_to_use,
                 &EsdtTokenPayment::new(self.rewards_token_identifier().get(), 0u64, rewards),
             );
-        } else {
-            sc_panic!("No rewards to claim");
         }
     }
 

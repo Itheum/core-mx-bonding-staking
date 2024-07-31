@@ -13,8 +13,8 @@ use multiversx_sc_scenario::{
 use crate::bonding_state::bonding_state::{
     ContractState, ADMIN_BONDING_CONTRACT_ADDRESS_EXPR, ANOTHER_TOKEN_IDENTIFIER_EXPR,
     BONDING_CONTRACT_ADDRESS_EXPR, DATA_NFT_IDENTIFIER, FIRST_USER_ADDRESS_EXPR,
-    ITHEUM_TOKEN_IDENTIFIER, ITHEUM_TOKEN_IDENTIFIER_EXPR, MINTER_CONTRACT_ADDRESS_EXPR,
-    OWNER_BONDING_CONTRACT_ADDRESS_EXPR, SECOND_USER_ADDRESS_EXPR,
+    ITHEUM_TOKEN_IDENTIFIER, ITHEUM_TOKEN_IDENTIFIER_EXPR, LIVELINESS_STAKE_CONTRACT_ADDRESS_EXPR,
+    MINTER_CONTRACT_ADDRESS_EXPR, OWNER_BONDING_CONTRACT_ADDRESS_EXPR, SECOND_USER_ADDRESS_EXPR,
 };
 
 #[test]
@@ -22,6 +22,7 @@ fn bond() {
     let mut state = ContractState::new();
     let first_user_address = state.first_user_address.clone();
     let minter_address = state.second_user_address.clone();
+
     let admin = state.admin.clone();
 
     state.deploy();
@@ -93,6 +94,14 @@ fn bond() {
     );
 
     state.set_lock_period_and_bond(OWNER_BONDING_CONTRACT_ADDRESS_EXPR, 10u64, 100u64, None);
+
+    state.set_liveliness_stake_contract(
+        OWNER_BONDING_CONTRACT_ADDRESS_EXPR,
+        AddressValue::from(LIVELINESS_STAKE_CONTRACT_ADDRESS_EXPR).to_address(),
+        None,
+    );
+
+    state.set_top_up_administrator(OWNER_BONDING_CONTRACT_ADDRESS_EXPR, admin.clone(), None);
 
     state.bond(
         FIRST_USER_ADDRESS_EXPR,

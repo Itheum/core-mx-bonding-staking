@@ -37,11 +37,6 @@ fn claim_rewards_tests() {
 
     state.top_up_rewards(OWNER_ADDRESS, 2_000_000u64, None);
 
-    state.claim_rewards(
-        FIRST_USER_ADDRESS,
-        Some(ExpectError(4, "No rewards to claim")),
-    );
-
     state.world.current_block().block_timestamp(1u64);
 
     state.bond_whitelist_for_bond(
@@ -335,11 +330,6 @@ fn claim_rewards_tests() {
         .world
         .check_account(FIRST_USER_ADDRESS)
         .esdt_balance(ITHEUM_TOKEN_IDENTIFIER, BigIntDec::from(684u64, 18u32));
-
-    state.claim_rewards(
-        FIRST_USER_ADDRESS,
-        Some(ExpectError(4, "No rewards to claim")),
-    );
 
     state
         .world
