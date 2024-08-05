@@ -401,6 +401,7 @@ pub trait LifeBondingContract:
 
     #[endpoint(setVaultNonce)]
     fn set_vault_nonce(&self, token_identifier: TokenIdentifier, nonce: u64) {
+        require_contract_ready!(self, ERR_CONTRACT_NOT_READY);
         let caller = self.blockchain().get_caller();
 
         let bond_id = self
@@ -418,6 +419,7 @@ pub trait LifeBondingContract:
     #[payable("*")]
     #[endpoint(topUpVault)]
     fn top_up_vault(&self, token_identifier: TokenIdentifier, nonce: u64) {
+        require_contract_ready!(self, ERR_CONTRACT_NOT_READY);
         let caller = self.blockchain().get_caller();
 
         self.tx()
@@ -465,6 +467,7 @@ pub trait LifeBondingContract:
         token_identifier: TokenIdentifier,
         nonce: u64,
     ) {
+        require_contract_ready!(self, ERR_CONTRACT_NOT_READY);
         let caller = self.blockchain().get_caller();
 
         require!(
@@ -517,6 +520,7 @@ pub trait LifeBondingContract:
         token_identifier: TokenIdentifier,
         amount: BigUint,
     ) {
+        require_contract_ready!(self, ERR_CONTRACT_NOT_READY);
         let caller = self.blockchain().get_caller();
         require!(
             caller == self.liveliness_stake_address().get(),

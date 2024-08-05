@@ -1,7 +1,7 @@
 use crate::{
     config::State,
     contexts::{
-        bond_cache::BondCache,
+        bond_cache::{self, BondCache},
         compensation_cache::{self, CompensationCache},
     },
     errors::{
@@ -135,7 +135,7 @@ pub trait AdminModule:
         self.tx()
             .to(self.liveliness_stake_address().get())
             .typed(proxy_contracts::liveliness_stake_proxy::CoreMxLivelinessStakeProxy)
-            .generate_rewards()
+            .claim_rewards(OptionalValue::Some(bond_cache.address.clone()))
             .sync_call();
 
         let penalty = match penalty {
