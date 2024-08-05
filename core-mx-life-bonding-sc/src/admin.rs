@@ -1,7 +1,7 @@
 use crate::{
     config::State,
     contexts::{
-        bond_cache::{self, BondCache},
+        bond_cache::BondCache,
         compensation_cache::{self, CompensationCache},
     },
     errors::{
