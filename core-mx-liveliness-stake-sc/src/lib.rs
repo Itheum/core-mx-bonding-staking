@@ -98,6 +98,8 @@ pub trait CoreMxLivelinessStake:
 
             self.address_last_reward_per_share(&address)
                 .set(rewards_per_share);
+        } else {
+            self.claim_rewards(OptionalValue::Some(address));
         }
     }
 
