@@ -1,5 +1,6 @@
 #![no_std]
 
+use config::MAX_PERCENT;
 use contexts::base::StorageCache;
 
 use crate::errors::{ERR_CONTRACT_NOT_READY, ERR_ENDPOINT_CALLABLE_ONLY_BY_ACCEPTED_CALLERS};
@@ -34,35 +35,41 @@ pub trait CoreMxLivelinessStake:
         self.set_contract_state_inactive();
     }
     #[endpoint(claimRewards)]
-    fn claim_rewards(&self, address: OptionalValue<ManagedAddress>) {
+    fn claim_rewards(&self) {
         require_contract_ready!(self, ERR_CONTRACT_NOT_READY);
 
         let caller = self.blockchain().get_caller();
-
-        // Determine the address to be used
-        let address_to_use = match address {
-            OptionalValue::Some(addr) => {
-                require!(
-                    caller == self.bond_contract_address().get(),
-                    ERR_ENDPOINT_CALLABLE_ONLY_BY_ACCEPTED_CALLERS
-                );
-                addr
-            }
-            OptionalValue::None => caller.clone(),
-        };
 
         let mut storage_cache = StorageCache::new(self);
 
         self.generate_aggregated_rewards(&mut storage_cache);
 
-        let user_last_rewards_per_share = self.address_last_reward_per_share(&address_to_use).get();
+        let user_last_rewards_per_share = self.address_last_reward_per_share(&caller).get();
 
-        let rewards =
-            self.calculate_caller_share_in_rewards(&address_to_use, &mut storage_cache, false);
+        let (total_staked_amount, user_stake_amount, liveliness_score) = self
+            .tx()
+            .to(self.bond_contract_address().get())
+            .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
+            .get_address_bonds_info(caller.clone())
+            .returns(ReturnsResult)
+            .sync_call();
+
+        self.calculate_caller_share_in_rewards(
+            &caller,
+            total_staked_amount,
+            user_stake_amount,
+            &mut storage_cache,
+        );
+
+        let mut stack_rewards = self.address_stack_rewards(&caller).get();
+
+        if liveliness_score < 95_00u64 {
+            stack_rewards = (liveliness_score * stack_rewards) / MAX_PERCENT
+        }
 
         self.claim_rewards_event(
-            &address_to_use,
-            &rewards,
+            &caller,
+            &stack_rewards,
             self.blockchain().get_block_timestamp(),
             self.blockchain().get_block_nonce(),
             &storage_cache.rewards_reserve,
@@ -72,12 +79,13 @@ pub trait CoreMxLivelinessStake:
             &storage_cache.rewards_per_block,
         );
 
-        if rewards > BigUint::zero() {
-            storage_cache.accumulated_rewards -= &rewards;
+        if stack_rewards > BigUint::zero() {
+            storage_cache.accumulated_rewards -= &stack_rewards;
+            self.address_stack_rewards(&caller).clear();
 
             self.send().direct_non_zero_esdt_payment(
-                &address_to_use,
-                &EsdtTokenPayment::new(self.rewards_token_identifier().get(), 0u64, rewards),
+                &caller,
+                &EsdtTokenPayment::new(self.rewards_token_identifier().get(), 0u64, stack_rewards),
             );
         }
     }
@@ -99,8 +107,54 @@ pub trait CoreMxLivelinessStake:
             self.address_last_reward_per_share(&address)
                 .set(rewards_per_share);
         } else {
-            self.claim_rewards(OptionalValue::Some(address));
+            self.stack_rewards(address);
         }
+    }
+
+    #[endpoint(stackRewards)]
+    fn stack_rewards(&self, address: ManagedAddress) {
+        require_contract_ready!(self, ERR_CONTRACT_NOT_READY);
+
+        let caller = self.blockchain().get_caller();
+
+        require!(
+            caller == self.bond_contract_address().get(),
+            ERR_ENDPOINT_CALLABLE_ONLY_BY_ACCEPTED_CALLERS
+        );
+
+        let mut storage_cache = StorageCache::new(self);
+
+        self.generate_aggregated_rewards(&mut storage_cache);
+
+        let user_last_rewards_per_share = self.address_last_reward_per_share(&address).get();
+
+        let (total_staked_amount, user_stake_amount, _) = self
+            .tx()
+            .to(self.bond_contract_address().get())
+            .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
+            .get_address_bonds_info(address.clone())
+            .returns(ReturnsResult)
+            .sync_call();
+
+        let current_rewards = self.calculate_caller_share_in_rewards(
+            &address,
+            total_staked_amount,
+            user_stake_amount,
+            &mut storage_cache,
+        );
+        // bypass liveliness score
+
+        self.stack_rewards_event(
+            &address,
+            &current_rewards,
+            self.blockchain().get_block_timestamp(),
+            self.blockchain().get_block_nonce(),
+            &storage_cache.rewards_reserve,
+            &storage_cache.accumulated_rewards,
+            &storage_cache.rewards_per_share,
+            &user_last_rewards_per_share,
+            &storage_cache.rewards_per_block,
+        );
     }
 
     #[endpoint(stakeRewards)]
@@ -115,11 +169,30 @@ pub trait CoreMxLivelinessStake:
 
         let user_last_rewards_per_share = self.address_last_reward_per_share(&caller).get();
 
-        let rewards = self.calculate_caller_share_in_rewards(&caller, &mut storage_cache, false);
+        let (total_staked_amount, user_stake_amount, liveliness_score) = self
+            .tx()
+            .to(self.bond_contract_address().get())
+            .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
+            .get_address_bonds_info(&caller)
+            .returns(ReturnsResult)
+            .sync_call();
+
+        self.calculate_caller_share_in_rewards(
+            &caller,
+            total_staked_amount,
+            user_stake_amount,
+            &mut storage_cache,
+        );
+
+        let mut stack_rewards = self.address_stack_rewards(&caller).get();
+
+        if liveliness_score < 95_00u64 {
+            stack_rewards = (liveliness_score * stack_rewards) / MAX_PERCENT
+        }
 
         self.claim_rewards_event(
             &caller,
-            &rewards,
+            &stack_rewards,
             self.blockchain().get_block_timestamp(),
             self.blockchain().get_block_nonce(),
             &storage_cache.rewards_reserve,
@@ -129,17 +202,18 @@ pub trait CoreMxLivelinessStake:
             &storage_cache.rewards_per_block,
         );
 
-        if rewards > BigUint::zero() {
-            storage_cache.accumulated_rewards -= &rewards;
+        if stack_rewards > BigUint::zero() {
+            storage_cache.accumulated_rewards -= &stack_rewards;
+            self.address_stack_rewards(&caller).clear();
 
             self.tx()
                 .to(self.bond_contract_address().get())
                 .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
-                .stake_rewards(caller, token_identifier, rewards.clone())
+                .stake_rewards(caller, token_identifier, stack_rewards.clone())
                 .esdt(EsdtTokenPayment::new(
                     self.rewards_token_identifier().get(),
                     0u64,
-                    rewards,
+                    stack_rewards,
                 ))
                 .sync_call();
         }

@@ -135,7 +135,7 @@ pub trait AdminModule:
         self.tx()
             .to(self.liveliness_stake_address().get())
             .typed(proxy_contracts::liveliness_stake_proxy::CoreMxLivelinessStakeProxy)
-            .claim_rewards(OptionalValue::Some(bond_cache.address.clone()))
+            .stack_rewards(bond_cache.address.clone())
             .sync_call();
 
         let penalty = match penalty {

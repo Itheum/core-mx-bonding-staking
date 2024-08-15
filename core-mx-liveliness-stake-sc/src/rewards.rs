@@ -84,38 +84,28 @@ pub trait RewardsModule:
     fn calculate_caller_share_in_rewards(
         self,
         caller: &ManagedAddress,
+        total_staked_amount: BigUint,
+        user_stake_amount: BigUint,
         storage_cache: &mut StorageCache<Self>,
-        bypass_liveliness: bool,
     ) -> BigUint {
-        let (total_staked_amount, user_stake_amount, liveliness_score) = self
-            .tx()
-            .to(self.bond_contract_address().get())
-            .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
-            .get_address_bonds_info(caller)
-            .returns(ReturnsResult)
-            .sync_call();
+        if total_staked_amount > BigUint::zero()
+            && storage_cache.accumulated_rewards > BigUint::zero()
+        {
+            let user_last_rewards_per_share = self.address_last_reward_per_share(caller).get();
 
-        if total_staked_amount == BigUint::zero() {
-            return BigUint::zero();
-        }
+            let user_rewards = user_stake_amount
+                * (&storage_cache.rewards_per_share - &user_last_rewards_per_share)
+                / DIVISION_SAFETY_CONST;
 
-        if storage_cache.accumulated_rewards == BigUint::zero() {
-            return BigUint::zero();
-        }
+            self.address_last_reward_per_share(caller)
+                .set(storage_cache.rewards_per_share.clone());
 
-        let user_last_rewards_per_share = self.address_last_reward_per_share(caller).get();
+            self.address_stack_rewards(caller)
+                .update(|value| *value += &user_rewards);
 
-        let user_rewards = user_stake_amount
-            * (&storage_cache.rewards_per_share - &user_last_rewards_per_share)
-            / DIVISION_SAFETY_CONST;
-
-        self.address_last_reward_per_share(caller)
-            .set(storage_cache.rewards_per_share.clone());
-
-        if liveliness_score >= 95_00u64 || bypass_liveliness {
             user_rewards
         } else {
-            (liveliness_score * user_rewards) / MAX_PERCENT
+            BigUint::zero()
         }
     }
 }

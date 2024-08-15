@@ -32,6 +32,10 @@ pub trait StorageModule {
     fn address_last_reward_per_share(&self, address: &ManagedAddress)
         -> SingleValueMapper<BigUint>;
 
+    #[view(addressStackRewards)]
+    #[storage_mapper("address_stack_rewards")]
+    fn address_stack_rewards(&self, address: &ManagedAddress) -> SingleValueMapper<BigUint>;
+
     #[view(maxApr)]
     #[storage_mapper("max_apr")]
     fn max_apr(&self) -> SingleValueMapper<BigUint>;

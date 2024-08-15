@@ -231,7 +231,7 @@ fn claim_rewards_tests() {
         .returns(ReturnsResult)
         .run();
 
-    assert_eq!(BigUint::from(6603u64), liveliness_score); // 66,04 % liveliness
+    assert_eq!(BigUint::from(6603u64), liveliness_score); // 66,03 % liveliness
 
     let first_user_claimable_rewards_with_liveliness_score_applied = state
         .world
@@ -252,7 +252,7 @@ fn claim_rewards_tests() {
         .run();
 
     assert_eq!(
-        BigIntDec::from(684u64, 18u32), // 684 tokens
+        BigUint::from(684000000000000000000u128), // 684 tokens
         first_user_claimable_rewards_with_full_liveliness
     );
 
@@ -322,7 +322,7 @@ fn claim_rewards_tests() {
         .returns(ReturnsResult)
         .run();
 
-    assert_eq!(BigIntDec::from(684u64, 18u32), updated);
+    assert_eq!(BigUint::from(683931600000000000000u128), updated);
 
     state.claim_rewards(FIRST_USER_ADDRESS, None);
 

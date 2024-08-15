@@ -179,7 +179,7 @@ pub trait LifeBondingContract:
         self.tx()
             .to(self.liveliness_stake_address().get())
             .typed(proxy_contracts::liveliness_stake_proxy::CoreMxLivelinessStakeProxy)
-            .claim_rewards(OptionalValue::Some(caller.clone()))
+            .stack_rewards(bond_cache.address.clone())
             .sync_call();
 
         let current_timestamp = self.blockchain().get_block_timestamp();
@@ -243,13 +243,13 @@ pub trait LifeBondingContract:
     fn renew(&self, token_identifier: TokenIdentifier, nonce: u64) {
         require_contract_ready!(self, ERR_CONTRACT_NOT_READY);
 
+        let caller = self.blockchain().get_caller();
+
         self.tx()
             .to(self.liveliness_stake_address().get())
             .typed(proxy_contracts::liveliness_stake_proxy::CoreMxLivelinessStakeProxy)
-            .generate_rewards()
+            .stack_rewards(caller.clone())
             .sync_call();
-
-        let caller = self.blockchain().get_caller();
 
         let bond_id = self.bonds_ids().get_id_non_zero((token_identifier, nonce));
 
@@ -425,7 +425,7 @@ pub trait LifeBondingContract:
         self.tx()
             .to(self.liveliness_stake_address().get())
             .typed(proxy_contracts::liveliness_stake_proxy::CoreMxLivelinessStakeProxy)
-            .claim_rewards(OptionalValue::Some(caller.clone()))
+            .stack_rewards(caller.clone())
             .sync_call();
 
         require!(
@@ -483,7 +483,7 @@ pub trait LifeBondingContract:
         self.tx()
             .to(self.liveliness_stake_address().get())
             .typed(proxy_contracts::liveliness_stake_proxy::CoreMxLivelinessStakeProxy)
-            .claim_rewards(OptionalValue::Some(caller.clone()))
+            .stack_rewards(caller.clone())
             .sync_call();
 
         let bond_id = self

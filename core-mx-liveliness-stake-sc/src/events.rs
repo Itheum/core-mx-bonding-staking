@@ -43,6 +43,20 @@ pub trait EventsModule {
         #[indexed] rewards_per_block: &BigUint,
     );
 
+    #[event("stack_rewards")]
+    fn stack_rewards_event(
+        &self,
+        #[indexed] caller: &ManagedAddress,
+        #[indexed] rewards_amount: &BigUint,
+        #[indexed] timestamp: u64,
+        #[indexed] block_nonce: u64,
+        #[indexed] rewards_reserve: &BigUint,
+        #[indexed] accumulated_rewards: &BigUint,
+        #[indexed] current_rewards_per_share: &BigUint,
+        #[indexed] user_last_rewards_per_share: &BigUint,
+        #[indexed] rewards_per_block: &BigUint,
+    );
+
     #[event("address_rewards_per_share_event")]
     fn address_rewards_per_share_event(
         &self,

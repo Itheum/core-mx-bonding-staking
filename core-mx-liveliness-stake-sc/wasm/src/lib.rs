@@ -6,9 +6,9 @@
 
 // Init:                                 1
 // Upgrade:                              1
-// Endpoints:                           30
+// Endpoints:                           32
 // Async Callback (empty):               1
-// Total number of exported functions:  33
+// Total number of exported functions:  35
 
 #![no_std]
 
@@ -22,6 +22,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         upgrade => upgrade
         claimRewards => claim_rewards
         setAddressRewardsPerShare => set_address_rewards_per_share
+        stackRewards => stack_rewards
         stakeRewards => stake_rewards
         setContractStateActive => set_contract_state_active
         setContractStateInactive => set_contract_state_inactive
@@ -46,6 +47,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         lastRewardBlockNonce => last_reward_block_nonce
         rewardsPerShare => rewards_per_share
         addressLastRewardPerShare => address_last_reward_per_share
+        addressStackRewards => address_stack_rewards
         maxApr => max_apr
         claimableRewards => claimable_rewards
         contractDetails => contract_details
