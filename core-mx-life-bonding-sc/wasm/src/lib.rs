@@ -6,9 +6,9 @@
 
 // Init:                                 1
 // Upgrade:                              1
-// Endpoints:                           60
+// Endpoints:                           61
 // Async Callback (empty):               1
-// Total number of exported functions:  63
+// Total number of exported functions:  64
 
 #![no_std]
 
@@ -45,6 +45,7 @@ multiversx_sc_wasm_adapter::endpoints! {
         getAddressBondsAvgScore => get_address_bonds_avg_score
         getAddressBondsTotalValue => get_address_bonds_total_value
         getAddressBondsInfo => get_address_bonds_info
+        getAddressStakeInfo => get_address_stake_info
         getAllBonds => get_all_bonds
         getPagedBonds => get_paged_bonds
         getBondsLen => get_bonds_len

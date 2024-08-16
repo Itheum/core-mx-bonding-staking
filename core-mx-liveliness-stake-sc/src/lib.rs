@@ -128,11 +128,11 @@ pub trait CoreMxLivelinessStake:
 
         let user_last_rewards_per_share = self.address_last_reward_per_share(&address).get();
 
-        let (total_staked_amount, user_stake_amount, _) = self
+        let (total_staked_amount, user_stake_amount) = self
             .tx()
             .to(self.bond_contract_address().get())
             .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
-            .get_address_bonds_info(address.clone())
+            .get_address_stake_info(address.clone())
             .returns(ReturnsResult)
             .sync_call();
 

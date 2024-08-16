@@ -1,4 +1,4 @@
 [settings]
 
 [[proxy]]
-path = "../core-mx-liveliness-stake/src/proxy_contracts/life_bonding_sc_proxy.rs"
+path = "../core-mx-liveliness-stake-sc/src/proxy_contracts/life_bonding_sc_proxy.rs"
