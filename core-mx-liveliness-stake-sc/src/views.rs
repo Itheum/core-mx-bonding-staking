@@ -1,5 +1,5 @@
 use crate::{
-    config,
+    config::{self, MAX_PERCENT},
     contexts::base::StorageCache,
     events,
     proxy_contracts::{self},
@@ -48,7 +48,27 @@ pub trait ViewsModule:
 
         self.generate_aggregated_rewards(&mut storage_cache);
 
-        self.calculate_caller_share_in_rewards(&caller, &mut storage_cache, bypass_liveliness)
+        let (total_staked_amount, user_stake_amount, liveliness_score) = self
+            .tx()
+            .to(self.bond_contract_address().get())
+            .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
+            .get_address_bonds_info(&caller)
+            .returns(ReturnsResult)
+            .sync_call();
+
+        self.calculate_caller_share_in_rewards(
+            &caller,
+            total_staked_amount,
+            user_stake_amount,
+            &mut storage_cache,
+        );
+
+        let stack_rewards = self.address_stack_rewards(&caller).get();
+        if bypass_liveliness {
+            stack_rewards
+        } else {
+            (liveliness_score * stack_rewards) / MAX_PERCENT
+        }
     }
 
     #[view(contractDetails)]

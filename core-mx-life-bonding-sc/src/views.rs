@@ -196,6 +196,14 @@ pub trait ViewsModule:
         )
     }
 
+    #[view(getAddressStakeInfo)]
+    fn get_address_stake_info(&self, address: ManagedAddress) -> (BigUint, BigUint) {
+        let address_bonds_value = self.get_address_bonds_total_value(&address);
+        let total_bond_amount = self.total_bond_amount().get();
+
+        (total_bond_amount, address_bonds_value)
+    }
+
     #[view(getAllBonds)]
     fn get_all_bonds(&self) -> ManagedVec<Bond<Self::Api>> {
         self.bonds()

@@ -208,7 +208,7 @@ setMaxApr(){
     mxpy --verbose contract call ${ADDRESS} \
     --recall-nonce \
     --pem=${WALLET} \
-    --gas-limit=6000000 \
+    --gas-limit=60000000 \
     --function "setMaxApr" \
     --arguments $1 \
     --proxy ${PROXY} \

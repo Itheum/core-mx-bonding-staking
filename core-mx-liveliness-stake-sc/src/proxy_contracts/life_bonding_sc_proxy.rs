@@ -440,6 +440,19 @@ where
             .original_result()
     }
 
+    pub fn get_address_stake_info<
+        Arg0: ProxyArg<ManagedAddress<Env::Api>>,
+    >(
+        self,
+        address: Arg0,
+    ) -> TxTypedCall<Env, From, To, NotPayable, Gas, (BigUint<Env::Api>, BigUint<Env::Api>)> {
+        self.wrapped_tx
+            .payment(NotPayable)
+            .raw_call("getAddressStakeInfo")
+            .argument(&address)
+            .original_result()
+    }
+
     pub fn get_all_bonds(
         self,
     ) -> TxTypedCall<Env, From, To, NotPayable, Gas, ManagedVec<Env::Api, Bond<Env::Api>>> {
