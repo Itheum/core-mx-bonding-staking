@@ -22,9 +22,16 @@ pub trait RewardsModule:
         let max_apr = self.max_apr().get();
 
         let extra_rewards: BigUint;
+        let total_staked_amount = self
+            .tx()
+            .to(self.bond_contract_address().get())
+            .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
+            .total_bond_amount()
+            .returns(ReturnsResult)
+            .sync_call();
         if max_apr > BigUint::zero() {
             let extra_rewards_apr_bounded_per_block =
-                self.get_amount_apr_bounded(&storage_cache.rewards_reserve);
+                self.get_amount_apr_bounded(&total_staked_amount); // max APR based on the total staked amount
 
             let current_block_nonce = self.blockchain().get_block_nonce();
 
@@ -38,14 +45,6 @@ pub trait RewardsModule:
         }
 
         if extra_rewards > BigUint::zero() && extra_rewards <= storage_cache.rewards_reserve {
-            let total_staked_amount = self
-                .tx()
-                .to(self.bond_contract_address().get())
-                .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
-                .total_bond_amount()
-                .returns(ReturnsResult)
-                .sync_call();
-
             let increment = &extra_rewards * DIVISION_SAFETY_CONST / &total_staked_amount;
 
             storage_cache.rewards_per_share += &increment;
