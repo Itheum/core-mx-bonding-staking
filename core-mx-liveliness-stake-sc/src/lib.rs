@@ -36,6 +36,9 @@ pub trait CoreMxLivelinessStake:
 
         // SHOULD BE DELETED AFTER UPGRADE
         self.rewards_per_share().clear();
+        self.rewards_reserve()
+            .update(|value| *value += self.accumulated_rewards().get());
+        self.accumulated_rewards().clear();
     }
     #[endpoint(claimRewards)]
     fn claim_rewards(&self) {
