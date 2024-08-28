@@ -22,6 +22,8 @@ pub enum State {
 }
 
 pub const COMPENSATION_SAFE_PERIOD: u64 = 86_400;
+//// for shorter devnet testing, use below...
+// pub const COMPENSATION_SAFE_PERIOD: u64 = 300; 
 
 #[multiversx_sc::module]
 pub trait ConfigModule: storage::StorageModule + events::EventsModule {

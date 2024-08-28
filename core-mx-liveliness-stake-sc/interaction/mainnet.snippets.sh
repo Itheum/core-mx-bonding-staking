@@ -1,38 +1,36 @@
-PROXY=https://devnet-gateway.multiversx.com
-CHAIN_ID="D"
+PROXY=https://gateway.multiversx.com
+CHAIN_ID="1"
 
-WALLET="./wallet.pem"
-ADMIN="./wallet2.pem"
+ADDRESS=$(mxpy data load --key=address-mainnet)
+DEPLOY_TRANSACTION=$(mxpy data load --key=deployTransaction-mainnet)
 
-ADDRESS=$(mxpy data load --key=address-devnet)
-DEPLOY_TRANSACTION=$(mxpy data load --key=deployTransaction-devnet)
-
-TOKEN="ITHEUM-fce905"
+TOKEN="ITHEUM-df6f26"
 TOKEN_HEX="0x$(echo -n ${TOKEN} | xxd -p -u | tr -d '\n')"
 
 # to deploy from last reprodubible build, we need to change or vice versa
 # --bytecode output/core-mx-liveliness-stake-sc.wasm \
 # to 
 # --bytecode output-docker/core-mx-liveliness-stake/core-mx-liveliness-stake.wasm \
-deploy(){
+deployMainnet(){
   mxpy --verbose contract deploy \
   --bytecode output-docker/core-mx-liveliness-stake/core-mx-liveliness-stake.wasm \
   --outfile deployOutput \
   --metadata-not-readable \
   --metadata-payable-by-sc \
-  --pem ${WALLET} \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
   --gas-limit 150000000 \
   --send \
   --recall-nonce \
-  --outfile="./interaction/deploy-devnet.interaction.json" || return
+  --ledger \
+  --ledger-address-index 0 \
+  --outfile="./interaction/deploy-mainnet.interaction.json" || return
 
-  TRANSACTION=$(mxpy data parse --file="./interaction/deploy-devnet.interaction.json" --expression="data['emittedTransactionHash']")
-  ADDRESS=$(mxpy data parse --file="./interaction/deploy-devnet.interaction.json" --expression="data['contractAddress']")
+  TRANSACTION=$(mxpy data parse --file="./interaction/deploy-mainnet.interaction.json" --expression="data['emittedTransactionHash']")
+  ADDRESS=$(mxpy data parse --file="./interaction/deploy-mainnet.interaction.json" --expression="data['contractAddress']")
 
-  mxpy data store --key=address-devnet --value=${ADDRESS}
-  mxpy data store --key=deployTransaction-devnet --value=${TRANSACTION}
+  mxpy data store --key=address-mainnet --value=${ADDRESS}
+  mxpy data store --key=deployTransaction-mainnet --value=${TRANSACTION}
 }
 
 # any change to code or property requires a full upgrade 
@@ -40,175 +38,189 @@ deploy(){
 # if only changing props, you can't just "append" new props. you have to add the old ones again and then add a new prop you need. i.e. it's not append, it's a whole reset
 # for upgrade, --outfile deployOutput is not needed
 # in below code example we added --metadata-payable to add PAYABLE to the prop of the SC and removed --metadata-not-readable to make it READABLE
-upgrade(){
+upgradeMainnet(){
   mxpy --verbose contract upgrade ${ADDRESS} \
   --bytecode output-docker/core-mx-liveliness-stake/core-mx-liveliness-stake.wasm \
   --metadata-not-readable \
   --metadata-payable-by-sc \
-  --pem ${WALLET} \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
   --gas-limit 150000000 \
   --recall-nonce \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
 }
 
 # if you interact without calling deploy(), then you need to 1st run this to restore the vars from data
-restoreDeployData() {
-  TRANSACTION=$(mxpy data parse --file="./interaction/deploy-devnet.interaction.json" --expression="data['emittedTransactionHash']")
-  ADDRESS=$(mxpy data parse --file="./interaction/deploy-devnet.interaction.json" --expression="data['contractAddress']")
+restoreDeployDataMainnet() {
+  TRANSACTION=$(mxpy data parse --file="./interaction/deploy-mainnet.interaction.json" --expression="data['emittedTransactionHash']")
+  ADDRESS=$(mxpy data parse --file="./interaction/deploy-mainnet.interaction.json" --expression="data['contractAddress']")
 
   # after we upgraded to mxpy 8.1.2, mxpy data parse seems to load the ADDRESS correctly but it breaks when used below with a weird "Bad address" error
-  # so, we just hardcode the ADDRESS here. Just make sure you use the "data['contractAddress'] from the latest deploy-devnet.interaction.json file
-  ADDRESS="erd1qqqqqqqqqqqqqpgq9j3dj650amzz8lyvek6uq0w0yvgtgggjfsxsf489hq"
+  # so, we just hardcode the ADDRESS here. Just make sure you use the "data['contractAddress'] from the latest deploy-mainnet.interaction.json file
+  ADDRESS="erd1qqqqqqqqqqqqqpgq65rn8zmf2tckftpu5lvxg2pzlg0dhfrwc77qcuynw7"
 }
 
-setAdministrator(){
+setAdministratorMainnet(){
   # $1 = address
 
   address="0x$(mxpy wallet bech32 --decode ${1})"
 
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${WALLET} \
   --gas-limit=6000000 \
   --function "setAdministrator" \
   --arguments $address \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
 }
 
-setBondContractAddress(){
+setBondContractAddressMainnet(){
   # $1 = address
 
   address="0x$(mxpy wallet bech32 --decode ${1})"
 
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${WALLET} \
   --gas-limit=6000000 \
   --function "setBondContractAddress" \
   --arguments $address \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
 }
 
-setRewardsTokenIdentifier(){
+setRewardsTokenIdentifierMainnet(){
   # $1 = token identifier
 
   token="0x$(echo -n ${1} | xxd -p -u | tr -d '\n')"
 
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${WALLET} \
   --gas-limit=6000000 \
   --function "setRewardsTokenIdentifier" \
   --arguments $token \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
 }
 
-setPerBlockRewardAmount(){
+setPerBlockRewardAmountMainnet(){
   # $1 = amount (with token decimals)
 
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${WALLET} \
   --gas-limit=9000000 \
   --function "setPerBlockRewardAmount" \
   --arguments $1 \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
 }
 
-topUpRewards(){
+topUpRewardsMainnet(){
   # $1 = amount of esdt to send 
+
+  # 14 is erd1djdd2fgdqdgmq5l75aluvqttpq7ra9umrwr8v0cdhwk9mnuk7kwsg9ak90
 
   method="0x$(echo -n "topUpRewards" | xxd -p -u | tr -d '\n')"
 
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${ADMIN} \
   --gas-limit=100000000 \
   --function "ESDTTransfer" \
   --arguments ${TOKEN_HEX} $1 $method \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 14 \
   --send || return
 }
 
-setContractStateActive(){
+setContractStateActiveMainnet(){
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${WALLET} \
   --gas-limit=6000000 \
   --function "setContractStateActive" \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
 }
 
-setContractStateInactive(){
+setContractStateInactiveMainnet(){
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${WALLET} \
   --gas-limit=6000000 \
   --function "setContractStateInactive" \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
 }
 
-withdrawRewards(){
+withdrawRewardsMainnet(){
   # $1 = amount of esdt to receive
 
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${WALLET} \
   --gas-limit=6000000 \
   --function "withdrawRewards" \
   --arguments $1 \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
 }
 
-startProduceRewards(){
+startProduceRewardsMainnet(){
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${WALLET} \
   --gas-limit=6000000 \
   --function "startProduceRewards" \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
 }
 
-endProduceRewards(){
+endProduceRewardsMainnet(){
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${WALLET} \
   --gas-limit=6000000 \
   --function "endProduceRewards" \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
 }
 
-setMaxApr(){
+setMaxAprMainnet(){
   # $1 = max apr (10000 = 100%)
 
   mxpy --verbose contract call ${ADDRESS} \
   --recall-nonce \
-  --pem=${WALLET} \
   --gas-limit=60000000 \
   --function "setMaxApr" \
   --arguments $1 \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
   --send || return
  }

@@ -38,7 +38,7 @@ deployLedgerMainnet(){
 # if only changing props, you can't just "append" new props. you have to add the old ones again and then add a new prop you need. i.e. it's not append, it's a whole reset
 # for upgrade, --outfile deployOutput is not needed
 # in below code example we added --metadata-payable to add PAYABLE to the prop of the SC and removed --metadata-not-readable to make it READABLE
-upgrade(){
+upgradeMainnet(){
     mxpy --verbose contract upgrade ${ADDRESS} \
     --bytecode output-docker/core-mx-life-bonding-sc/core-mx-life-bonding-sc.wasm \
     --metadata-not-readable \
@@ -307,4 +307,39 @@ initiateBondMainnet() {
     --ledger \
     --ledger-address-index 0 \
     --send || return
+}
+
+# V3 Methods
+setLivelinessStakeAddressMainnet(){
+  # $1 = address
+
+  address="0x$(mxpy wallet bech32 --decode ${1})"
+
+  mxpy --verbose contract call ${ADDRESS} \
+  --recall-nonce \
+  --gas-limit=6000000 \
+  --function "setLivelinessStakeAddress" \
+  --arguments $address \
+  --proxy ${PROXY} \
+  --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
+  --send || return
+}
+
+setTopUpAdministratorMainnet(){
+  # $1 = address
+
+  address="0x$(mxpy wallet bech32 --decode ${1})"
+
+  mxpy --verbose contract call ${ADDRESS} \
+  --recall-nonce \
+  --gas-limit=6000000 \
+  --function "setTopUpAdministrator" \
+  --arguments $address \
+  --proxy ${PROXY} \
+  --chain ${CHAIN_ID} \
+  --ledger \
+  --ledger-address-index 0 \
+  --send || return
 }
