@@ -17,39 +17,43 @@ pub trait RewardsModule:
         self.generate_aggregated_rewards(&mut storage_cache);
     }
     fn generate_aggregated_rewards(&self, storage_cache: &mut StorageCache<Self>) {
-        let last_reward_nonce = self.last_reward_block_nonce().get();
-        let extra_rewards_unbounded = self.calculate_rewards_since_last_allocation(storage_cache);
-        let max_apr = self.max_apr().get();
+        if self.can_produce_rewards() {
+            let last_reward_nonce = self.last_reward_block_nonce().get();
+            let extra_rewards_unbounded =
+                self.calculate_rewards_since_last_allocation(storage_cache);
+            let max_apr = self.max_apr().get();
 
-        let extra_rewards: BigUint;
-        let total_staked_amount = self
-            .tx()
-            .to(self.bond_contract_address().get())
-            .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
-            .total_bond_amount()
-            .returns(ReturnsResult)
-            .sync_call();
-        if max_apr > BigUint::zero() {
-            let extra_rewards_apr_bounded_per_block =
-                self.get_amount_apr_bounded(&total_staked_amount); // max APR based on the total staked amount
+            let extra_rewards: BigUint;
+            let total_staked_amount = self
+                .tx()
+                .to(self.bond_contract_address().get())
+                .typed(proxy_contracts::life_bonding_sc_proxy::LifeBondingContractProxy)
+                .total_bond_amount()
+                .returns(ReturnsResult)
+                .sync_call();
+            if max_apr > BigUint::zero() {
+                let extra_rewards_apr_bounded_per_block =
+                    self.get_amount_apr_bounded(&total_staked_amount); // max APR based on the total staked amount
 
-            let current_block_nonce = self.blockchain().get_block_nonce();
+                let current_block_nonce = self.blockchain().get_block_nonce();
 
-            let block_nonce_diff = current_block_nonce - last_reward_nonce;
+                let block_nonce_diff = current_block_nonce - last_reward_nonce;
 
-            let extra_rewards_apr_bounded = extra_rewards_apr_bounded_per_block * block_nonce_diff;
+                let extra_rewards_apr_bounded =
+                    extra_rewards_apr_bounded_per_block * block_nonce_diff;
 
-            extra_rewards = core::cmp::min(extra_rewards_unbounded, extra_rewards_apr_bounded);
-        } else {
-            extra_rewards = extra_rewards_unbounded;
-        }
+                extra_rewards = core::cmp::min(extra_rewards_unbounded, extra_rewards_apr_bounded);
+            } else {
+                extra_rewards = extra_rewards_unbounded;
+            }
 
-        if extra_rewards > BigUint::zero() && extra_rewards <= storage_cache.rewards_reserve {
-            let increment = &extra_rewards * DIVISION_SAFETY_CONST / &total_staked_amount;
+            if extra_rewards > BigUint::zero() && extra_rewards <= storage_cache.rewards_reserve {
+                let increment = &extra_rewards * DIVISION_SAFETY_CONST / &total_staked_amount;
 
-            storage_cache.rewards_per_share += &increment;
-            storage_cache.accumulated_rewards += &extra_rewards;
-            storage_cache.rewards_reserve -= &extra_rewards;
+                storage_cache.rewards_per_share += &increment;
+                storage_cache.accumulated_rewards += &extra_rewards;
+                storage_cache.rewards_reserve -= &extra_rewards;
+            }
         }
     }
 
@@ -64,10 +68,6 @@ pub trait RewardsModule:
         storage_cache: &mut StorageCache<Self>,
     ) -> BigUint {
         let current_block_nonce = self.blockchain().get_block_nonce();
-
-        if !self.can_produce_rewards() {
-            return BigUint::zero();
-        }
 
         if current_block_nonce <= storage_cache.last_reward_block_nonce {
             return BigUint::zero();
