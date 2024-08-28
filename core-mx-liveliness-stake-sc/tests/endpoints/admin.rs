@@ -10,7 +10,17 @@ fn admin_endpoint() {
     let mut contract_state = ContractState::new();
 
     contract_state.deploy();
+    contract_state.bond_deploy_and_set(7_889_400u64, 1000);
     contract_state.set_administrator(OWNER_ADDRESS, ADMIN_ADDRESS, None);
+
+    contract_state.set_bond_contract_address(
+        FIRST_USER_ADDRESS,
+        BONDING_CONTRACT_ADDRESS,
+        Some(ExpectError(4, "Not privileged")),
+    );
+
+    contract_state.set_bond_contract_address(ADMIN_ADDRESS, BONDING_CONTRACT_ADDRESS, None);
+    contract_state.set_bond_contract_address(OWNER_ADDRESS, BONDING_CONTRACT_ADDRESS, None);
 
     contract_state
         .set_contract_state_active(FIRST_USER_ADDRESS, Some(ExpectError(4, "Not privileged")));
@@ -43,6 +53,9 @@ fn admin_endpoint() {
         Some(ExpectError(4, "Not privileged")),
     );
 
+    contract_state
+        .start_produce_rewards(FIRST_USER_ADDRESS, Some(ExpectError(4, "Not privileged")));
+
     contract_state.top_up_rewards(ADMIN_ADDRESS, 2_000_000u64, None);
 
     contract_state.top_up_rewards(OWNER_ADDRESS, 2_000_000u64, None);
@@ -62,8 +75,14 @@ fn admin_endpoint() {
         Some(ExpectError(4, "Not privileged")),
     );
 
-    contract_state
-        .start_produce_rewards(FIRST_USER_ADDRESS, Some(ExpectError(4, "Not privileged")));
+    contract_state.set_max_apr(OWNER_ADDRESS, 10u64, None);
+    contract_state.set_max_apr(ADMIN_ADDRESS, 10u64, None);
+
+    contract_state.set_max_apr(
+        FIRST_USER_ADDRESS,
+        10u64,
+        Some(ExpectError(4, "Not privileged")),
+    );
 
     contract_state.start_produce_rewards(ADMIN_ADDRESS, None);
 
@@ -74,22 +93,4 @@ fn admin_endpoint() {
     contract_state.end_produce_rewards(OWNER_ADDRESS, None);
 
     contract_state.end_produce_rewards(FIRST_USER_ADDRESS, Some(ExpectError(4, "Not privileged")));
-
-    contract_state.set_bond_contract_address(
-        FIRST_USER_ADDRESS,
-        BONDING_CONTRACT_ADDRESS,
-        Some(ExpectError(4, "Not privileged")),
-    );
-
-    contract_state.set_bond_contract_address(ADMIN_ADDRESS, BONDING_CONTRACT_ADDRESS, None);
-    contract_state.set_bond_contract_address(OWNER_ADDRESS, BONDING_CONTRACT_ADDRESS, None);
-
-    contract_state.set_max_apr(OWNER_ADDRESS, 10u64, None);
-    contract_state.set_max_apr(ADMIN_ADDRESS, 10u64, None);
-
-    contract_state.set_max_apr(
-        FIRST_USER_ADDRESS,
-        10u64,
-        Some(ExpectError(4, "Not privileged")),
-    );
 }
