@@ -31,14 +31,17 @@ pub trait CoreMxLivelinessStake:
     fn init(&self) {}
 
     #[upgrade]
-    fn upgrade(&self) {
+    fn upgrade(&self, address: ManagedAddress) {
         self.set_contract_state_inactive();
 
+        self.address_last_reward_per_share(&address).clear();
+        self.address_stack_rewards(&address).clear();
+
         // SHOULD BE DELETED AFTER UPGRADE
-        self.rewards_per_share().clear();
-        self.rewards_reserve()
-            .update(|value| *value += self.accumulated_rewards().get());
-        self.accumulated_rewards().clear();
+        // self.rewards_per_share().clear();
+        // self.rewards_reserve()
+        //     .update(|value| *value += self.accumulated_rewards().get());
+        // self.accumulated_rewards().clear();
     }
     #[endpoint(claimRewards)]
     fn claim_rewards(&self) {
