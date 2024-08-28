@@ -33,6 +33,9 @@ pub trait CoreMxLivelinessStake:
     #[upgrade]
     fn upgrade(&self) {
         self.set_contract_state_inactive();
+
+        // SHOULD BE DELETED AFTER UPGRADE
+        self.rewards_per_share().clear();
     }
     #[endpoint(claimRewards)]
     fn claim_rewards(&self) {
