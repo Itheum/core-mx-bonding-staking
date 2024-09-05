@@ -8,8 +8,8 @@ publish = false
 [lib]
 path = "src/lib.rs"
 
-# [dev-dependencies]
-# core-mx-liveliness-stake = {path="../core-mx-liveliness-stake-sc"}
+[dev-dependencies]
+core-mx-liveliness-stake = {path="../core-mx-liveliness-stake-sc"}
 
 [dependencies.multiversx-sc]
 version = "0.51.0"

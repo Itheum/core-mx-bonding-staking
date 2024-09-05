@@ -41,11 +41,16 @@ deploy(){
 # for upgrade, --outfile deployOutput is not needed
 # in below code example we added --metadata-payable to add PAYABLE to the prop of the SC and removed --metadata-not-readable to make it READABLE
 upgrade(){
+  # $1 = address
+
+  address="0x$(mxpy wallet bech32 --decode ${1})"
+
   mxpy --verbose contract upgrade ${ADDRESS} \
   --bytecode output-docker/core-mx-liveliness-stake/core-mx-liveliness-stake.wasm \
   --metadata-not-readable \
   --metadata-payable-by-sc \
   --pem ${WALLET} \
+  --arguments $address \
   --proxy ${PROXY} \
   --chain ${CHAIN_ID} \
   --gas-limit 150000000 \

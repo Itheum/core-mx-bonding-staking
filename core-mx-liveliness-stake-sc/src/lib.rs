@@ -31,9 +31,19 @@ pub trait CoreMxLivelinessStake:
     fn init(&self) {}
 
     #[upgrade]
-    fn upgrade(&self) {
+    fn upgrade(&self, address: ManagedAddress) {
         self.set_contract_state_inactive();
+
+        // @TODO: WAS NEEDED AS WE SOLVED ISSUES WITH MAINNET UPGRADE, THIS SHOULD BE DELETED AFTER UPGRADE
+        // IN THE NEXT OFFICIAL UPGRADE, LETS REMOVE THIS CODE AND ALSO the 'address: ManagedAddress' ABOVE
+        // self.address_last_reward_per_share(&address).clear();
+        // self.address_stack_rewards(&address).clear();
+        // self.rewards_per_share().clear();
+        // self.rewards_reserve()
+        //     .update(|value| *value += self.accumulated_rewards().get());
+        // self.accumulated_rewards().clear();
     }
+    
     #[endpoint(claimRewards)]
     fn claim_rewards(&self) {
         require_contract_ready!(self, ERR_CONTRACT_NOT_READY);

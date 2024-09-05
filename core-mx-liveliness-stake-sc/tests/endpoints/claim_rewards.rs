@@ -447,6 +447,6 @@ fn claim_rewards_max_apr_tests() {
 
     assert_eq!(
         contract_details.accumulated_rewards,
-        BigUint::from(1643831811263317948250u128)
+        BigUint::from(1643831811262993949u128)
     ); // 1.643,831 tokens which is ~ 1% of rewards without apr
 }

@@ -12,9 +12,9 @@ Understanding this document is also easier if one knows how [ESDT token transact
 
 ## Itheum deployed contract addresses
 
-| Devnet | Mainnet |
-| erd1qqqqqqqqqqqqqpgq9j3dj650amzz8lyvek6uq0w0yvgtgggjfsxsf489hq | ------- |
-| | |
+| Devnet                                                         | Mainnet                                                        |
+| -------------------------------------------------------------- | -------------------------------------------------------------- |
+| erd1qqqqqqqqqqqqqpgq9j3dj650amzz8lyvek6uq0w0yvgtgggjfsxsf489hq | erd1qqqqqqqqqqqqqpgq65rn8zmf2tckftpu5lvxg2pzlg0dhfrwc77qcuynw7 |
 
 ## Endpoints
 
@@ -37,9 +37,12 @@ cargo clean
 cargo build
 ```
 
+**Note: REMOVE V1 workaround code from upgrade method in lib.rc**
+Check the notes in `upgrade` and remove as needed before any further upgrade.
+
 **Note: REMOVE DEV DEPENDENCIES BEFORE FINAL BUILD**
 
-- As you can see in the main Cargo.toml, we are pointing to in the [dev-dependencies] section to the life-bonding-sc contract. This is only needed for unit tests and local build and test, so in the final build (i.e. before you call the reproducible build), we should comment this out or else the docket build will fail (and also cause we dont need this in the final build we deploy to the blockchain)
+- As you can see in the main Cargo.toml, we are pointing to in the [dev-dependencies] section to the life-bonding-sc contract. This is only needed for unit tests and local build and test, so in the final build (i.e. before you call the reproducible build), we should comment this out or else the docket build will fail (and also cause we don't need this in the final build we deploy to the blockchain)
 
 **Note: PROXY FILES**
 

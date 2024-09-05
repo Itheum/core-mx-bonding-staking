@@ -11,9 +11,9 @@ path = "src/lib.rs"
 [dependencies.multiversx-sc]
 version = "0.51.0"
 
-# [dev-dependencies]
-# core-mx-life-bonding-sc = {path="../core-mx-life-bonding-sc"}
-# num-traits= "0.2.19"
+[dev-dependencies]
+core-mx-life-bonding-sc = {path="../core-mx-life-bonding-sc"}
+num-traits= "0.2.19"
 
 [dev-dependencies.multiversx-sc-scenario]
 version = "0.51.0"
